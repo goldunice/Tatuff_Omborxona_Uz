@@ -110,14 +110,30 @@ def download_excel(modeladmin, request, queryset):
     for col_num, header in enumerate(headers):
         worksheet.write(0, col_num, header, header_format)
 
+    # Auto-adjust column widths
+    for col_num, field in enumerate(headers):
+        if field == "T/r":
+            max_len = 5  # "T/r" uchun qo'lda kenglikni belgilang
+        else:
+            max_len = max(
+                [len(str(getattr(obj, field))) for obj in queryset if hasattr(obj, field)] + [len(field)]
+            )
+        worksheet.set_column(col_num, col_num, max_len + 2)
+
     # Write data rows
     for row_num, obj in enumerate(queryset, 1):
         worksheet.write(row_num, 0, row_num)
         for col_num, field in enumerate(modeladmin.model._meta.fields, 1):
             value = str(getattr(obj, field.name))
 
-            # Apply conditional formatting
-            if field.name == "amaliyot_turi":  # Adjust this field name as per your model
+            # Vaqtni formatlash
+            if isinstance(getattr(obj, field.name), datetime):
+                value = localtime(getattr(obj, field.name)).strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                getattr(obj, field.name)
+
+            # Amaliyot turiga rang kiritish
+            if field.name == "amaliyot_turi":
                 if value == "Kirdi":
                     worksheet.write(row_num, col_num, value, kirdi_format)
                 elif value == "Chiqdi":

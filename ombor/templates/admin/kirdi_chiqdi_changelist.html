@@ -1,0 +1,37 @@
+{% extends "admin/change_list.html" %}
+{% block object-tools %}
+<style>
+    .button {
+        display: inline-flex;
+        align-items: center;
+        background-color: white; /* Oq rang */
+        color: #28a745; /* Yashil rang */
+        padding: 5px 10px;
+        font-size: 14px;
+        font-weight: bold;
+        border: 1px solid #28a745;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .button:hover {
+        background-color: #28a745; /* Yashil rang hoverda */
+        border-color: #218838;
+        color: white;
+    }
+
+    .button::before {
+        content: "+";
+        display: inline-block;
+        margin-right: 5px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+</style>
+
+{{ block.super }}
+<li>
+    <a href="{{ kirdi_upload_url }}" class="button">Kirdi Faylni Yuklash</a>
+</li>
+{% endblock %}

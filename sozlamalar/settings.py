@@ -1,17 +1,27 @@
 from pathlib import Path
 import os
+import environ
+
+# Initialise environment variables
+env = environ.Env()
+environ.Env.read_env()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+# Secret Key
+SECRET_KEY = env("SECRET_KEY")
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%=^pry1ex=vtm!@ra@t#p-ni)ht#pxk=sp-4z6+)%^du0z)osl'
+# Debug mode
+DEBUG = env.bool("DEBUG", default=False)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Allowed Hosts
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
-ALLOWED_HOSTS = []
-
+# Database
+DATABASES = {
+    'default': env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR}/db.sqlite3")
+}
 # Application definition
 
 INSTALLED_APPS = [
@@ -45,7 +55,7 @@ ROOT_URLCONF = 'sozlamalar.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -102,13 +112,14 @@ USE_I18N = True
 
 USE_TZ = True
 
-# Media fayllarni boshqarish (asosan foydalanuvchi uchun rasm qo'yish uchun
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Static files
+STATIC_URL = env("STATIC_URL", default="/static/")
+STATIC_ROOT = env("STATIC_ROOT", default=str(BASE_DIR / "static"))
 
-# Static fayllarni boshqarish uchun
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# Media files
+MEDIA_URL = env("MEDIA_URL", default="/media/")
+MEDIA_ROOT = env("MEDIA_ROOT", default=str(BASE_DIR / "media"))
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

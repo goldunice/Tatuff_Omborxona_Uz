@@ -1,0 +1,90 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 0;
+    }
+
+    h1 {
+        text-align: center;
+        color: #333;
+        margin-top: 20px;
+        font-size: 2rem;
+    }
+
+    form {
+        width: 50%;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid #ddd;
+    }
+
+    form p {
+        margin-bottom: 15px;
+    }
+
+    form label {
+        font-weight: bold;
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+    }
+
+    form input[type="file"],
+    form select,
+    form textarea,
+    form input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+        margin-bottom: 15px;
+    }
+
+    .button {
+        display: block;
+        width: 100%;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 12px;
+        font-size: 1rem;
+        font-weight: bold;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        transition: background-color 0.3s ease;
+    }
+
+    .button:hover {
+        background-color: #0056b3;
+    }
+
+    .button:active {
+        background-color: #004494;
+    }
+
+    .message {
+        text-align: center;
+        font-size: 1rem;
+        color: #333;
+        margin-top: 10px;
+    }
+</style>
+
+<h1>Kirdi Ma'lumotlarini Yuklash</h1>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="button">Yuklash</button>
+</form>
+{% endblock %}
+

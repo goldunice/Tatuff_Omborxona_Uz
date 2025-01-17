@@ -12,12 +12,13 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Table, TableStyle
+from django.urls import reverse
 
 from .models import CustomUser
 from .models import Mahsulot, MahsulotBalans, MahsulotBalansTarix, KirdiChiqdi, KirdiChiqdiForm, OlchovBirligi
 
-admin.site.__class__ = OTPAdminSite
 
+# admin.site.__class__ = OTPAdminSite
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
@@ -160,9 +161,6 @@ class OlchovBirligiAdmin(admin.ModelAdmin):
     ordering = ('-id',)  # O'lchov birligi ID bo'yicha tartibda ko'rsatish
     list_per_page = 20  # Bir sahifada ko'rsatilgan elementlar soni
 
-    def has_change_permission(self, request, obj=None):
-        return False
-
 
 # === Custom Filter ===
 class OlchovBirligiFilter(admin.SimpleListFilter):
@@ -200,9 +198,6 @@ class MahsulotAdmin(admin.ModelAdmin):
     ordering = ('-id',)  # Mahsulotlarni id bo'yicha tartibda ko'rsatish
     list_per_page = 20  # Bir sahifada ko'rsatilgan elementlar soni
 
-    def has_change_permission(self, request, obj=None):
-        return False
-
 
 # === MahsulotBalans Admin ===
 # Bu bo'lim mahsulot balansi (ombordagi miqdor)ni boshqarish uchun.
@@ -238,10 +233,10 @@ class MahsulotBalansAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False  # Mahsulot balansi o'zgartirish huquqi yo'q
 
-    # O'chirish ruxsatini o'chirib qo'ying
-    def has_delete_permission(self, request, obj=None):
-        return False
-    # Ob'ektlarni o'chirishni oldini olish
+    # # O'chirish ruxsatini o'chirib qo'ying
+    # def has_delete_permission(self, request, obj=None):
+    #     return False
+    # # Ob'ektlarni o'chirishni oldini olish
 
 
 # === MahsulotBalansTarix Admin ===
@@ -250,10 +245,11 @@ class MahsulotBalansAdmin(admin.ModelAdmin):
 class MahsulotBalansTarixAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'mahsulot_nomi', 'miqdor', 'get_olchov_birligi', 'qoldiq', 'sana',
-        'colored_amaliyot_turi')  # Ko'rinadigan ustunlar
+        'colored_amaliyot_turi', 'kimga', 'qayerga')  # Ko'rinadigan ustunlar
     search_fields = ('mahsulot_nomi__mahsulot_nomi', 'amaliyot_turi')  # Mahsulot nomi va turiga qidiruv
     list_filter = [
-        ('sana', DateTimeRangeFilter)]  # Operatsiya turi va sanasi bo'yicha filter ('amaliyot_turi', 'sana'),
+        ('sana', DateTimeRangeFilter),
+        'amaliyot_turi']  # Operatsiya turi va sanasi bo'yicha filter ('amaliyot_turi', 'sana'),
     date_hierarchy = 'sana'  # Sanalar bo'yicha navigatsiya
     ordering = ('-id',)  # Teskari tartibda ko'rsatish
     list_per_page = 20  # Bir sahifada ko'rsatilgan elementlar soni
@@ -284,25 +280,33 @@ class MahsulotBalansTarixAdmin(admin.ModelAdmin):
         return False  # Kirdi Chiqdi o'zgartirish huquqi yo'q
 
     # O'chirish ruxsatini o'chirib qo'ying
-    def has_delete_permission(self, request, obj=None):
-        return False
-    # Ob'ektlarni o'chirishni oldini olish
+    # def has_delete_permission(self, request, obj=None):
+    #     return False
+    # # Ob'ektlarni o'chirishni oldini olish
 
 
 # === KirdiChiqdi Admin ===
 # Bu bo'lim kirim-chiqim operatsiyalarini boshqarish uchun.
 @admin.register(KirdiChiqdi)
 class KirdiChiqdiAdmin(admin.ModelAdmin):
+    # O'zgartirishga ruxsat berilgan maydonlar
+    # readonly_fields = ['mahsulot_nomi', 'miqdor', 'amaliyot_turi']  # Bu maydonlar faqat o'qish uchun
     form = KirdiChiqdiForm  # Maxsus forma qo'llanadi
     list_display = (
         'id', 'mahsulot_nomi', 'miqdor', 'get_olchov_birligi', 'sana',
-        'colored_amaliyot_turi')  # Ko'rinadigan ustunlar
+        'colored_amaliyot_turi', 'kimga', 'qayerga')  # Ko'rinadigan ustunlar
     list_display_links = ('id', 'mahsulot_nomi')  # Mahsulotga bosilganda operatsiya ko'rsatiladi
     search_fields = ('mahsulot_nomi__mahsulot_nomi', 'amaliyot_turi')  # Mahsulot nomi va turiga qidiruv
     list_filter = ('amaliyot_turi', 'sana')  # Operatsiya turi va sanasi bo'yicha filter
     date_hierarchy = 'sana'  # Sanalar bo'yicha navigatsiya
     ordering = ('-sana',)  # Teskari tartibda tartib ko'rsatish
     list_per_page = 20  # Bir sahifada ko'rsatilgan elementlar soni
+    change_list_template = "admin/kirdi_chiqdi_changelist.html"
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['kirdi_upload_url'] = reverse('kirdi_upload')
+        return super().changelist_view(request, extra_context=extra_context)
 
     def colored_amaliyot_turi(self, obj):
         """Amaliyot turini rangli qilib ko‘rsatadi."""
@@ -320,8 +324,8 @@ class KirdiChiqdiAdmin(admin.ModelAdmin):
 
     get_olchov_birligi.short_description = "O'lchov Birligi"  # Header in the admin table
 
-    def has_change_permission(self, request, obj=None):
-        return False
+    # def has_change_permission(self, request, obj=None):
+    #     return False
 
 
 # Qo'shimcha konfiguratsiya

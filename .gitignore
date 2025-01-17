@@ -1,1 +1,26 @@
-.env
+# Virtual environment
+env/
+venv/
+
+# Byte-compiled files
+__pycache__/
+*.pyc
+*.pyo
+
+# Django secret files
+*.env
+
+# Static and media files
+staticfiles/
+media/
+
+# Database files
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+

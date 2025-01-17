@@ -10,7 +10,7 @@ environ.Env.read_env()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 # Secret Key
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = 'django-insecure-%=^pry1ex=vtm!@ra@t#p-ni)ht#pxk=sp-4z6+)%^du0z)osl'
 
 # Debug mode
 DEBUG = env.bool("DEBUG", default=False)

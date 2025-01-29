@@ -1,9 +1,10 @@
 import re
-
 from django import forms
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
+from decimal import Decimal
+from django.core.validators import MinValueValidator
 
 
 # === Foydalanuvchi Modeli ===
@@ -189,6 +190,13 @@ class KirdiChiqdi(models.Model):
     mahsulot_nomi = models.ForeignKey(Mahsulot, on_delete=models.PROTECT, default=1,
                                       verbose_name="Mahsulot nomi")  # Mahsulotga bog'langan
     miqdor = models.PositiveIntegerField(default=0, verbose_name="Miqdor")  # Mahsulot miqdori
+    summa = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name="Summa",
+        help_text="Faqat musbat qiymat kiriting. Katta sonlar formatlanadi."
+    )
     sana = models.DateTimeField(auto_now_add=True, verbose_name="Sana")  # Operatsiya sanasi
     amaliyot_turi = models.CharField(max_length=15, choices=Kirdi_Chiqdi,
                                      verbose_name="Amaliyot turi")  # Operatsiya turi ("Kirdi" yoki "Chiqdi")
@@ -209,7 +217,20 @@ class KirdiChiqdi(models.Model):
         verbose_name = "Kirdi Chiqdi"
         verbose_name_plural = "Kirdi Chiqdi"
 
+    def formatted_summa(self):
+        """Summa ustunini formatlash."""
+        return "{:,.2f}".format(self.summa)
+
+    formatted_summa.short_description = "Formatlangan summa"
+
     def clean(self):
+
+        # `summa` validatsiyasi
+        if not isinstance(self.summa, (int, float, Decimal)):
+            raise ValidationError({"summa": "Summa faqat son bo'lishi kerak."})
+        if self.summa <= 0:
+            raise ValidationError({"summa": "Summa musbat bo'lishi shart."})
+
         # Ortiqcha bo'shliqlarni olib tashlash va tekshiruvlar
         if self.kimga:
             self.kimga = re.sub(r'\s+', ' ', self.kimga.strip()).title()
@@ -228,6 +249,13 @@ class KirdiChiqdi(models.Model):
                 raise ValidationError({"kimga": "Chiqdi operatsiyasi uchun 'Kimga' maydoni kiritilishi shart!"})
             if not self.qayerga:
                 raise ValidationError({"qayerga": "Chiqdi operatsiyasi uchun 'Qayerga' maydoni kiritilishi shart!"})
+
+        # "Kirdi" amaliyoti uchun majburiy tekshiruvlar
+        if self.amaliyot_turi == "Kirdi":
+            if self.kimga:
+                raise ValidationError({"kimga": "Kirdi operatsiyasi uchun 'Kimga' maydoni kiritilishi shart emas!"})
+            if self.qayerga:
+                raise ValidationError({"qayerga": "Kirdi operatsiyasi uchun 'Qayerga' maydoni kiritilishi  emas!"})
 
         # Ombordagi balansni tekshirish
         if self.amaliyot_turi == "Chiqdi":
@@ -290,6 +318,11 @@ class KirdiChiqdiForm(forms.ModelForm):
         amaliyot_turi = cleaned_data.get("amaliyot_turi")
         kimga = cleaned_data.get("kimga")
         qayerga = cleaned_data.get("qayerga")
+        summa = self.cleaned_data.get("summa")
+
+        # Summa faqat musbat qiymat bo'lishini tekshirish.
+        if summa is not None and summa <= 0:
+            raise forms.ValidationError("Summa musbat qiymat bo'lishi shart!")
 
         # "Chiqdi" amaliyoti uchun qo'shimcha maydonlar
         if amaliyot_turi == "Chiqdi":
